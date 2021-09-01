@@ -51,6 +51,7 @@ _start_args = {
     'disable_cache': True,                          # Sets the no-store response header when serving assets
     'default_path': 'index.html',                   # The default file to retrieve for the root URL
     'app': btl.default_app(),                       # Allows passing in a custom Bottle instance, e.g. with middleware
+    'class_instance': None,                         # Allow a class instance (i.e. self) to be passed to exposed functions
 }
 
 # == Temporary (suppressable) error message to inform users of breaking API change for v1.0.0 ===
@@ -278,7 +279,10 @@ def _process_message(message, ws):
     if 'call' in message:
         error_info = {}
         try:
-            return_val = _exposed_functions[message['name']](*message['args'])
+            if _start_args['class_instance'] is not None:
+                return_val = _exposed_functions[message['name']](_start_args['class_instance'], *message['args'])
+            else:
+                return_val = _exposed_functions[message['name']](*message['args'])
             status = 'ok'
         except Exception as e:
             err_traceback = traceback.format_exc()
